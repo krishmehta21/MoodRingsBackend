@@ -16,6 +16,44 @@ class LinkPartnerRequest(BaseModel):
     invite_code: str
     user_id: str
 
+class ProfileUpdateRequest(BaseModel):
+    user_id: str
+    display_name: str
+    age: int | None = None
+    relationship_type: str | None = None
+    together_duration: str | None = None
+    anniversary_date: str | None = None
+    timezone: str | None = None
+
+@router.patch("/profile")
+def update_profile(req: ProfileUpdateRequest, db: Session = Depends(database.get_db)):
+    uid = uuid.UUID(req.user_id)
+    user = db.query(models.User).filter(models.User.id == uid).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+        
+    user.display_name = req.display_name
+    user.age = req.age
+    user.relationship_type = req.relationship_type
+    user.together_duration = req.together_duration
+    user.anniversary_date = req.anniversary_date
+    user.timezone = req.timezone
+    
+    if req.display_name and len(req.display_name.strip()) > 0:
+        user.profile_complete = True
+    else:
+        raise HTTPException(status_code=400, detail="Display name is required")
+    
+    db.commit()
+    db.refresh(user)
+    
+    return {
+        "id": str(user.id),
+        "display_name": user.display_name,
+        "profile_complete": user.profile_complete
+    }
+
 @router.get("/me")
 def get_me(user_id: str, db: Session = Depends(database.get_db)):
     uid = uuid.UUID(user_id)
@@ -23,6 +61,18 @@ def get_me(user_id: str, db: Session = Depends(database.get_db)):
     
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
+        
+    partner_display_name = None
+    if user.partner_id:
+        partner = db.query(models.User).filter(models.User.id == user.partner_id).first()
+        if partner:
+            partner_display_name = partner.display_name
+    
+    profile_complete = bool(
+        user.profile_complete and 
+        user.display_name and 
+        len(user.display_name.strip()) > 0
+    )
     
     return {
         "id": str(user.id),
@@ -30,6 +80,14 @@ def get_me(user_id: str, db: Session = Depends(database.get_db)):
         "partner_id": str(user.partner_id) if user.partner_id else None,
         "invite_code": user.invite_code,
         "created_at": user.created_at,
+        "display_name": user.display_name,
+        "age": user.age,
+        "relationship_type": user.relationship_type,
+        "together_duration": user.together_duration,
+        "anniversary_date": user.anniversary_date,
+        "timezone": user.timezone,
+        "profile_complete": profile_complete,
+        "partner_display_name": partner_display_name
     }
 
 @router.post("/generate-code")
@@ -96,3 +154,21 @@ def unlink_partner(user_id: str, db: Session = Depends(database.get_db)):
     
     db.commit()
     return {"message": "Successfully unlinked from partner."}
+
+@router.delete("/me")
+def delete_account(user_id: str, db: Session = Depends(database.get_db)):
+    uid = uuid.UUID(user_id)
+    user = db.query(models.User).filter(models.User.id == uid).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+        
+    if user.partner_id:
+        partner = db.query(models.User).filter(models.User.id == user.partner_id).first()
+        if partner:
+            partner.partner_id = None
+            
+    db.query(models.MoodLog).filter(models.MoodLog.user_id == uid).delete(synchronize_session=False)
+    db.delete(user)
+    db.commit()
+    return {"message": "Account successfully deleted."}

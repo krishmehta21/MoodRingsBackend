@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Boolean, ForeignKey, DateTime, SmallInteger
+from sqlalchemy import Column, String, Float, Boolean, ForeignKey, DateTime, SmallInteger, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.sql import func
@@ -13,6 +13,16 @@ class User(Base):
     partner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     invite_code = Column(String(6), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Profile fields
+    display_name = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
+    relationship_type = Column(String, nullable=True)
+    together_duration = Column(String, nullable=True)
+    anniversary_date = Column(String, nullable=True)
+    timezone = Column(String, nullable=True)
+    profile_complete = Column(Boolean, default=False, server_default='false', nullable=False)
+    
     partner = relationship("User", remote_side=[id])
 
 class MoodLog(Base):
