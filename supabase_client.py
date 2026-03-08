@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-url: str = os.getenv("SUPABASE_URL", "http://localhost:8001")
-key: str = os.getenv("SUPABASE_SERVICE_KEY", "YOUR_SUPABASE_SERVICE_KEY")
+url: str = os.getenv("SUPABASE_URL")
+key: str = os.getenv("SUPABASE_SERVICE_KEY")
+
+if not url or not key:
+    raise Exception("Supabase environment variables not set")
 
 supabase: Client = create_client(url, key)
