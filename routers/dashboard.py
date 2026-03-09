@@ -144,6 +144,10 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
 
         dashboard_data["response_lag_hours"] = get_response_lag_hours(db, [uid, partner_id], today)
 
+        # Baseline default
+        dashboard_data["risk_color"] = '#7AAB8A'
+        dashboard_data["risk_label"] = 'Feeling connected'
+
         sorted_ids = sorted([str(uid), str(partner_id)])
         couple_uuid = uuid.uuid5(uuid.NAMESPACE_OID, f"{sorted_ids[0]}_{sorted_ids[1]}")
         latest_risk = db.query(models.RiskScore).filter(
@@ -156,12 +160,20 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
 
             if latest_risk.p_stress > 0.85:
                 tier = "priority_alert"
+                dashboard_data["risk_color"] = '#C4764A'
+                dashboard_data["risk_label"] = 'Needs attention'
             elif latest_risk.p_stress > 0.70:
                 tier = "active_suggestion"
+                dashboard_data["risk_color"] = '#C4A35A'
+                dashboard_data["risk_label"] = 'Some tension detected'
             elif latest_risk.p_stress > 0.50:
                 tier = "soft_nudge"
+                dashboard_data["risk_color"] = '#C4A35A'
+                dashboard_data["risk_label"] = 'Some tension detected'
             else:
                 tier = None
+                dashboard_data["risk_color"] = '#7AAB8A'
+                dashboard_data["risk_label"] = 'Feeling connected'
 
             tier_mapping = {
                 "priority_alert": {

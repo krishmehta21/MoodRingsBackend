@@ -16,6 +16,10 @@ class LinkPartnerRequest(BaseModel):
     invite_code: str
     user_id: str
 
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+
 class ProfileUpdateRequest(BaseModel):
     user_id: str
     display_name: str
@@ -52,6 +56,61 @@ def update_profile(req: ProfileUpdateRequest, db: Session = Depends(database.get
         "id": str(user.id),
         "display_name": user.display_name,
         "profile_complete": user.profile_complete
+    }
+
+@router.post("/register")
+def register(req: AuthRequest, db: Session = Depends(database.get_db)):
+    auth_resp = supabase.auth.sign_up({"email": req.email, "password": req.password})
+    if not auth_resp.user:
+        raise HTTPException(status_code=400, detail="Registration failed with Supabase.")
+        
+    uid = uuid.UUID(auth_resp.user.id)
+    existing = db.query(models.User).filter(models.User.id == uid).first()
+    if not existing:
+        new_user = models.User(id=uid, email=req.email)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    else:
+        new_user = existing
+        
+    return {
+        "access_token": auth_resp.session.access_token if auth_resp.session else None,
+        "user": {
+            "id": str(new_user.id),
+            "email": new_user.email,
+            "partner_id": str(new_user.partner_id) if new_user.partner_id else None,
+            "profile_complete": new_user.profile_complete
+        }
+    }
+
+@router.post("/login")
+def login(req: AuthRequest, db: Session = Depends(database.get_db)):
+    try:
+        auth_resp = supabase.auth.sign_in_with_password({"email": req.email, "password": req.password})
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+        
+    if not auth_resp.session:
+        raise HTTPException(status_code=401, detail="Missing session.")
+        
+    uid = uuid.UUID(auth_resp.user.id)
+    user = db.query(models.User).filter(models.User.id == uid).first()
+    
+    if not user:
+        user = models.User(id=uid, email=req.email)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+    return {
+        "access_token": auth_resp.session.access_token,
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "partner_id": str(user.partner_id) if user.partner_id else None,
+            "profile_complete": user.profile_complete
+        }
     }
 
 @router.get("/me")
@@ -134,7 +193,14 @@ def link_partner(req: LinkPartnerRequest, db: Session = Depends(database.get_db)
     partner.invite_code = None
     db.commit()
     
-    return {"message": "Partner successfully linked!"}
+    return {
+        "message": "Partner successfully linked!",
+        "partner": {
+            "id": str(partner.id),
+            "display_name": partner.display_name,
+            "email": partner.email
+        }
+    }
 
 @router.delete("/unlink")
 def unlink_partner(user_id: str, db: Session = Depends(database.get_db)):

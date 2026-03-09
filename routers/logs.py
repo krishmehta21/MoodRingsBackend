@@ -23,6 +23,7 @@ class MoodLogCreate(BaseModel):
     emotion_tags: Optional[List[str]] = []
     journal_text: Optional[str] = None
     calendar_stress: Optional[float] = None
+    logged_at: Optional[str] = None
 
 class MoodLogEdit(BaseModel):
     score: Optional[int] = None
@@ -55,7 +56,18 @@ def create_mood_log(
         raise HTTPException(status_code=404, detail="User not found.")
 
     encrypted_journal = encrypt_text(log_in.journal_text) if log_in.journal_text else None
-    now = datetime.now(timezone.utc)
+    
+    if log_in.logged_at:
+        try:
+            # handle just "YYYY-MM-DD"
+            dt = datetime.fromisoformat(log_in.logged_at)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            now = dt
+        except ValueError:
+            now = datetime.now(timezone.utc)
+    else:
+        now = datetime.now(timezone.utc)
 
     new_log = models.MoodLog(
         user_id=uid,

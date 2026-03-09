@@ -49,14 +49,16 @@ def get_correlation(user_id: str, period: int = Query(30), db: Session = Depends
     else:
         correlation = round(float(correlation), 2)
         
-    if correlation > 0.6:
-        interpretation = "You two have been in great sync."
-    elif correlation > 0.3:
-        interpretation = "Some divergence this period."
-    elif correlation > 0.0:
-        interpretation = "You've been on slightly different wavelengths."
+    if correlation >= 0.8:
+        interpretation = "Your moods have been really in sync lately"
+    elif correlation >= 0.4:
+        interpretation = "You've been broadly moving together"
+    elif correlation >= 0.0:
+        interpretation = "Your moods haven't been tracking each other much this month"
+    elif correlation >= -0.39:
+        interpretation = "You've been trending in opposite directions recently"
     else:
-        interpretation = "You've been experiencing completely opposite moods recently."
+        interpretation = "You've been experiencing opposite moods — one up when the other is down"
         
     return {
         "score": correlation,

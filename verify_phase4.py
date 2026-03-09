@@ -3,7 +3,7 @@ import time
 import uuid
 from datetime import datetime, timedelta
 
-BASE_URL = "http://localhost:8001"
+BASE_URL = "http://127.0.0.1:8000"
 
 def run_verification():
     print("1. Creating test users and linking...")
@@ -15,22 +15,30 @@ def run_verification():
     code = res_a.get("invite_code")
     requests.post(f"{BASE_URL}/auth/link", json={"invite_code": code, "user_id": user_b_id})
 
-    # Create 7 days of divergent logs
+    # Create 7 days of logs with strong divergence and overlapping low days
     print("\n2. Submitting divergent mood logs over 7 days to trigger high stress...")
     for i in range(7, 0, -1):
         day = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
-        # User A high scores (8-9)
-        a_score = 9 if i % 2 == 0 else 8
+        
+        # Days 3, 2, 1: both partners low (2) to increase low_score_overlap
+        if i <= 3:
+            a_score = 2
+            b_score = 2
+        else:
+            # Remaining days: user A high (9), user B low (2)
+            a_score = 9
+            b_score = 2
+            
         requests.post(f"{BASE_URL}/logs", json={
             "user_id": user_a_id,
             "logged_at": day,
             "score": a_score,
-            "emotion_tags": ["Happy"],
-            "journal_text": "Feeling great today."
+            "emotion_tags": ["Happy" if a_score > 5 else "Sad"],
+            "journal_text": "Feeling great today." if a_score > 5 else "Feeling terrible today."
         })
-        # User B low scores (2-3). Introduce a missing day for broken streak at day 4.
-        if i != 4:  # skip day 4 for user B to break streak
-            b_score = 2 if i % 2 == 0 else 3
+        
+        # User B: skip day 5 to break streak
+        if i != 5:
             requests.post(f"{BASE_URL}/logs", json={
                 "user_id": user_b_id,
                 "logged_at": day,
@@ -38,9 +46,8 @@ def run_verification():
                 "emotion_tags": ["Sad"],
                 "journal_text": "Having a rough day."
             })
-        time.sleep(0.2)
+        time.sleep(0.1)
 
-    # Today logs (both low to ensure recent stress)
     today_str = datetime.now().strftime("%Y-%m-%d")
     requests.post(f"{BASE_URL}/logs", json={
         "user_id": user_a_id, "logged_at": today_str, "score": 2,
@@ -77,6 +84,14 @@ def run_verification():
     print("\n8. Insights patterns...")
     res_pat = requests.get(f"{BASE_URL}/insights/patterns?user_id={user_a_id}")
     print("Patterns response:", res_pat.json())
+
+    # Debug: query logs directly from DB
+    res_me = requests.get(f"{BASE_URL}/logs/me?user_id={user_a_id}")
+    res_partner = requests.get(f"{BASE_URL}/logs/couple?user_id={user_a_id}")
+    print("\nDEBUG:")
+    print("My Logs:", [ {"date": l["logged_at"], "score": l["score"]} for l in res_me.json() ])
+    partner_only = [l for l in res_partner.json() if l["user_id"] == user_b_id]
+    print("Partner Logs:", [ {"date": l["logged_at"], "score": l["score"]} for l in partner_only ])
 
 if __name__ == "__main__":
     run_verification()
