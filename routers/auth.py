@@ -86,30 +86,39 @@ def register(req: AuthRequest, db: Session = Depends(database.get_db)):
 
 @router.post("/login")
 def login(req: AuthRequest, db: Session = Depends(database.get_db)):
+    # Step 1: Supabase auth
     try:
         auth_resp = supabase.auth.sign_in_with_password({"email": req.email, "password": req.password})
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid credentials.")
-        
+        raise HTTPException(status_code=401, detail=f"Supabase auth failed: {str(e)}")
+
     if not auth_resp.session:
-        raise HTTPException(status_code=401, detail="Missing session.")
-        
-    uid = uuid.UUID(auth_resp.user.id)
-    user = db.query(models.User).filter(models.User.id == uid).first()
-    
-    if not user:
-        user = models.User(id=uid, email=req.email)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    # Step 2: DB lookup — wrapped separately so we can see DB errors
+    try:
+        uid = uuid.UUID(auth_resp.user.id)
+        user = db.query(models.User).filter(models.User.id == uid).first()
+
+        if not user:
+            user = models.User(id=uid, email=req.email)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     return {
         "access_token": auth_resp.session.access_token,
         "user": {
             "id": str(user.id),
             "email": user.email,
             "partner_id": str(user.partner_id) if user.partner_id else None,
-            "profile_complete": user.profile_complete
+            "profile_complete": user.profile_complete,
+            "display_name": user.display_name,
         }
     }
 
