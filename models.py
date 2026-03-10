@@ -12,6 +12,9 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     partner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     invite_code = Column(String(6), nullable=True)
+    invite_code_expires_at = Column(DateTime(timezone=True), nullable=True)
+    google_access_token = Column(String, nullable=True)
+    google_refresh_token = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Profile fields

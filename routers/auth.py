@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import models, database
 from supabase_client import supabase
 from pydantic import BaseModel
+from datetime import datetime, timedelta, timezone
 import random
 import string
 import uuid
@@ -172,9 +173,13 @@ def generate_invite_code(user_id: str, db: Session = Depends(database.get_db)):
         return {"message": "You are already linked to a partner."}
         
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=48)
+    
     user.invite_code = code
+    user.invite_code_expires_at = expires_at
     db.commit()
-    return {"invite_code": code}
+    
+    return {"invite_code": code, "expires_at": expires_at.isoformat()}
 
 @router.post("/link")
 def link_partner(req: LinkPartnerRequest, db: Session = Depends(database.get_db)):
@@ -183,6 +188,9 @@ def link_partner(req: LinkPartnerRequest, db: Session = Depends(database.get_db)
     
     if not partner:
         raise HTTPException(status_code=404, detail="Invalid invite code.")
+        
+    if partner.invite_code_expires_at and partner.invite_code_expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invite code has expired.")
         
     if partner.id == uid:
         raise HTTPException(status_code=400, detail="Cannot link to yourself.")
@@ -200,6 +208,7 @@ def link_partner(req: LinkPartnerRequest, db: Session = Depends(database.get_db)
     current_user.partner_id = partner.id
     partner.partner_id = current_user.id
     partner.invite_code = None
+    partner.invite_code_expires_at = None
     db.commit()
     
     return {

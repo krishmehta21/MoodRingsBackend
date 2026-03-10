@@ -92,25 +92,7 @@ def get_risk_tier(p_stress: float):
         return None, "#7AAB8A", "Feeling connected"
 
 
-SUGGESTION_COPY = {
-    "priority_alert": {
-        "title": "Priority Connection Moment",
-        "description": "One of you is experiencing significant stress. Consider reaching out with extra care and support."
-    },
-    "active_suggestion": {
-        "title": "Check In Together",
-        "description": "There's noticeable stress in your relationship. A moment of connection could help."
-    },
-    "soft_nudge": {
-        "title": "Connection Moment",
-        "description": "Take a minute to share one thing you appreciate about each other today."
-    }
-}
-
-DEFAULT_SUGGESTION = {
-    "title": "Connection Moment",
-    "description": "Take a minute to share one thing you appreciate about each other today."
-}
+# Hardcoded suggestions removed - now using dynamic engine in services/suggestions.py and models.py
 
 
 @router.get("")
@@ -169,7 +151,7 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
             "last_7_days": my_scores
         },
         "partner": None,
-        "suggestion": DEFAULT_SUGGESTION
+        "suggestion": None
     }
 
     if not partner_id:
@@ -217,8 +199,27 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
         dashboard_data["risk_label"] = label
         dashboard_data["features_snapshot"] = latest_risk.features_snapshot or {}
 
-        if tier:
-            dashboard_data["suggestion"] = SUGGESTION_COPY[tier]
+        # Fetch the latest unacted suggestion from the DB
+        latest_suggestion = db.query(models.Suggestion).filter(
+            models.Suggestion.couple_id == couple_uuid,
+            models.Suggestion.acted_on == False
+        ).order_by(models.Suggestion.created_at.desc()).first()
+
+        if latest_suggestion:
+            # Map tier names to readable titles
+            titles = {
+                "priority": "Priority Connection",
+                "active": "Connection Needed",
+                "soft": "A Small Suggestion"
+            }
+            dashboard_data["suggestion"] = {
+                "id": str(latest_suggestion.id),
+                "title": titles.get(latest_suggestion.tier, "A Note for You Two"),
+                "description": latest_suggestion.message,
+                "tier": latest_suggestion.tier,
+                "actions": latest_suggestion.actions,
+                "acted_on": latest_suggestion.acted_on
+            }
 
     dashboard_data["partner"] = {
         "today_logged": partner_logged_today,

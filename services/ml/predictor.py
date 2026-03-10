@@ -72,12 +72,12 @@ def compute_features(db: Session, user_id: str, partner_id: str, access_token: O
     
     user_scores = db.query(models.MoodLog.score).filter(
         models.MoodLog.user_id == user_id,
-        models.MoodLog.logged_at >= seven_days_ago
+        func.date(models.MoodLog.logged_at) >= seven_days_ago
     ).all()
     
     partner_scores = db.query(models.MoodLog.score).filter(
         models.MoodLog.user_id == partner_id,
-        models.MoodLog.logged_at >= seven_days_ago
+        func.date(models.MoodLog.logged_at) >= seven_days_ago
     ).all()
     
     user_scores_list = [s[0] for s in user_scores]
@@ -98,14 +98,14 @@ def compute_features(db: Session, user_id: str, partner_id: str, access_token: O
     
     last_7_s = db.query(func.avg(models.MoodLog.sentiment_score)).filter(
         models.MoodLog.user_id == user_id,
-        models.MoodLog.logged_at >= seven_days_ago,
+        func.date(models.MoodLog.logged_at) >= seven_days_ago,
         models.MoodLog.sentiment_score.isnot(None)
     ).scalar() or 0.0
     
     prev_7_s = db.query(func.avg(models.MoodLog.sentiment_score)).filter(
         models.MoodLog.user_id == user_id,
-        models.MoodLog.logged_at >= prev_7_start,
-        models.MoodLog.logged_at < seven_days_ago,
+        func.date(models.MoodLog.logged_at) >= prev_7_start,
+        func.date(models.MoodLog.logged_at) < seven_days_ago,
         models.MoodLog.sentiment_score.isnot(None)
     ).scalar() or 0.0
     
@@ -135,7 +135,7 @@ def compute_features(db: Session, user_id: str, partner_id: str, access_token: O
     # standard deviation of user's scores over last 14 days
     user_14d_scores = db.query(models.MoodLog.score).filter(
         models.MoodLog.user_id == user_id,
-        models.MoodLog.logged_at >= prev_7_start
+        func.date(models.MoodLog.logged_at) >= prev_7_start
     ).all()
     user_14d_list = [s[0] for s in user_14d_scores]
     volatility = np.std(user_14d_list) if len(user_14d_list) > 1 else 0.0
@@ -145,17 +145,17 @@ def compute_features(db: Session, user_id: str, partner_id: str, access_token: O
     # 7. low_score_overlap
     # count of days where BOTH partners scored below 4 in the last 7 days
     # Let's fetch the actual dates
-    u_low_dates = set([d[0] for d in db.query(models.MoodLog.logged_at).filter(
+    u_low_dates = set([d[0].date() for d in db.query(models.MoodLog.logged_at).filter(
         models.MoodLog.user_id == user_id,
-        models.MoodLog.logged_at >= seven_days_ago,
+        func.date(models.MoodLog.logged_at) >= seven_days_ago,
         models.MoodLog.score < 4
-    ).all()])
+    ).all() if d[0]])
     
-    p_low_dates = set([d[0] for d in db.query(models.MoodLog.logged_at).filter(
+    p_low_dates = set([d[0].date() for d in db.query(models.MoodLog.logged_at).filter(
         models.MoodLog.user_id == partner_id,
-        models.MoodLog.logged_at >= seven_days_ago,
+        func.date(models.MoodLog.logged_at) >= seven_days_ago,
         models.MoodLog.score < 4
-    ).all()])
+    ).all() if d[0]])
     
     overlap = len(u_low_dates.intersection(p_low_dates))
     features['low_score_overlap'] = overlap
@@ -184,10 +184,15 @@ def generate_and_save_risk_score(user_id: str, partner_id: str, access_token: Op
         sorted_ids = sorted([str(user_id), str(partner_id)])
         couple_uuid = uuid.uuid5(uuid.NAMESPACE_OID, f"{sorted_ids[0]}_{sorted_ids[1]}")
         
-        features, p_stress = compute_features(db, user_id, partner_id, access_token)
+        # Determine if we should use the user's token or partner's token (or both?)
+        # For simple v1, we use the token of the user who just logged.
+        curr_user = db.query(models.User).filter(models.User.id == user_id).first()
+        token = curr_user.google_access_token if curr_user else None
+        
+        features, p_stress = compute_features(db, user_id, partner_id, token)
         
         suggestion = False
-        if p_stress > 0.50:
+        if p_stress > 0.70:
             suggestion = True
             
         new_risk = models.RiskScore(

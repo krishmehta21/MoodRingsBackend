@@ -125,4 +125,30 @@ def get_patterns(user_id: str, db: Session = Depends(database.get_db)):
             "observation": f"You both experienced a sustained period of low mood recently ({longest_low_streak} days). Remember that you are a team."
         })
         
+    # 3. Relational Weekday Patterns (Joint highs/lows)
+    days = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"]
+    if common_dates:
+        joint_scores = {i: [] for i in range(7)}
+        for d in common_dates:
+            joint_avg = (my_dict[d] + p_dict[d]) / 2.0
+            joint_scores[d.date().weekday()].append(joint_avg)
+            
+        joint_avgs = {day: np.mean(scores) for day, scores in joint_scores.items() if scores}
+        
+        if joint_avgs:
+            best_joint_day = max(joint_avgs, key=joint_avgs.get)
+            worst_joint_day = min(joint_avgs, key=joint_avgs.get)
+            
+            if joint_avgs[best_joint_day] >= 7.5:
+                patterns.append({
+                    "type": "best_joint_day",
+                    "observation": f"{days[best_joint_day]} have been your brightest days together lately. Keep making time for what works!"
+                })
+            
+            if joint_avgs[worst_joint_day] <= 4.5:
+                patterns.append({
+                    "type": "worst_joint_day",
+                    "observation": f"{days[worst_joint_day]} often seem to be heavy for both of you. Consider a small shared ritual to lighten the load."
+                })
+
     return patterns
