@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
+import time
 
 import models
 import database
@@ -14,6 +15,8 @@ try:
     analyzer = SentimentIntensityAnalyzer()
 except ImportError:
     analyzer = None
+
+from services.ml.predictor import generate_and_save_risk_score
 
 router = APIRouter(prefix="/logs", tags=["Logs"])
 
@@ -44,6 +47,25 @@ def analyze_and_update_sentiment(log_id: uuid.UUID, text: str):
     finally:
         db.close()
 
+def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partner_id: Optional[uuid.UUID], journal_text: Optional[str]):
+    """Consolidated background task for NLP, ML, and other heavy operations."""
+    db = database.SessionLocal()
+    try:
+        # 1. NLP Sentiment
+        if journal_text:
+            analyze_and_update_sentiment(log_id, journal_text)
+
+        # 2. ML & Risk Prediction
+        if partner_id:
+            generate_and_save_risk_score(str(user_id), str(partner_id))
+            
+        # 3. Push notifications (Placeholder for future expansion)
+        # logger.info(f"Background processing complete for log {log_id}")
+    except Exception:
+        pass # Background tasks must be robust
+    finally:
+        db.close()
+
 @router.post("")
 def create_mood_log(
     log_in: MoodLogCreate,
@@ -51,15 +73,18 @@ def create_mood_log(
     db: Session = Depends(database.get_db)
 ):
     uid = uuid.UUID(log_in.user_id)
-    user = db.query(models.User).filter(models.User.id == uid).first()
-    if not user:
+    
+    # 1. Validate User and get partner_id (Synchronous)
+    user_info = db.query(models.User.partner_id).filter(models.User.id == uid).first()
+    if not user_info:
         raise HTTPException(status_code=404, detail="User not found.")
+    partner_id = user_info.partner_id
 
+    # 2. Encryption (Fast)
     encrypted_journal = encrypt_text(log_in.journal_text) if log_in.journal_text else None
     
     if log_in.logged_at:
         try:
-            # handle just "YYYY-MM-DD"
             dt = datetime.fromisoformat(log_in.logged_at)
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
@@ -69,7 +94,9 @@ def create_mood_log(
     else:
         now = datetime.now(timezone.utc)
 
+    # 3. Create and save the raw log row
     new_log = models.MoodLog(
+        id=uuid.uuid4(), # Client-side ID generation for zero-roundtrip retrieval
         user_id=uid,
         logged_at=now,
         score=log_in.score,
@@ -77,19 +104,22 @@ def create_mood_log(
         journal_text=encrypted_journal,
         calendar_stress=log_in.calendar_stress
     )
+    log_id = new_log.id
 
     db.add(new_log)
     db.commit()
-    db.refresh(new_log)
 
-    if log_in.journal_text:
-        background_tasks.add_task(analyze_and_update_sentiment, new_log.id, log_in.journal_text)
+    # 4. Hand off all heavy work to background task
+    background_tasks.add_task(
+        run_mood_post_processing, 
+        log_id, 
+        uid, 
+        partner_id,
+        log_in.journal_text
+    )
 
-    if user.partner_id:
-        from services.ml.predictor import generate_and_save_risk_score
-        background_tasks.add_task(generate_and_save_risk_score, str(uid), str(user.partner_id))
-
-    return {"message": "Log created successfully", "log_id": str(new_log.id)}
+    # 5. Return immediately
+    return {"message": "Log created successfully", "log_id": str(log_id)}
 
 @router.get("/me")
 def get_my_logs(user_id: str, db: Session = Depends(database.get_db)):
