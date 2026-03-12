@@ -30,6 +30,9 @@ class ProfileUpdateRequest(BaseModel):
     anniversary_date: str | None = None
     timezone: str | None = None
 
+class PushTokenRequest(BaseModel):
+    token: str
+
 
 @router.patch("/profile")
 def update_profile(req: ProfileUpdateRequest, db: Session = Depends(database.get_db)):
@@ -59,6 +62,23 @@ def update_profile(req: ProfileUpdateRequest, db: Session = Depends(database.get
         "display_name": user.display_name,
         "profile_complete": user.profile_complete
     }
+
+
+@router.patch("/push-token")
+def update_push_token(req: PushTokenRequest, user_id: str, db: Session = Depends(database.get_db)):
+    uid = uuid.UUID(user_id)
+    user = db.query(models.User).filter(models.User.id == uid).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    if not req.token.startswith("ExponentPushToken["):
+        raise HTTPException(status_code=400, detail="Invalid Expo push token.")
+
+    user.expo_push_token = req.token
+    db.commit()
+
+    return {"status": "ok"}
 
 
 @router.post("/register")

@@ -25,6 +25,7 @@ class User(Base):
     anniversary_date = Column(String, nullable=True)
     timezone = Column(String, nullable=True)
     profile_complete = Column(Boolean, default=False, server_default='false', nullable=False)
+    expo_push_token = Column(String, nullable=True, default=None)
     
     partner = relationship("User", remote_side=[id])
 
@@ -63,3 +64,19 @@ class Suggestion(Base):
     actions = Column(ARRAY(String), nullable=True)
     acted_on = Column(Boolean, default=False)
     acted_on_at = Column(DateTime(timezone=True), nullable=True)
+
+class PartnerNudge(Base):
+    __tablename__ = "partner_nudges"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    nudge_id = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    forecast_slope = Column(Float, nullable=False)
+    predicted_score = Column(Float, nullable=False)
+    confidence = Column(Float, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    seen_at = Column(DateTime(timezone=True), nullable=True)
+    acted_on_at = Column(DateTime(timezone=True), nullable=True)
+    was_helpful = Column(Boolean, nullable=True)

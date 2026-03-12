@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import models
 from database import engine
-from routers import auth, logs, dashboard, risk, suggestions, insights, calendar
+from routers import auth, logs, dashboard, risk, suggestions, insights, calendar, nudges
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
@@ -25,6 +25,7 @@ app.include_router(risk.router)
 app.include_router(suggestions.router)
 app.include_router(insights.router)
 app.include_router(calendar.router)
+app.include_router(nudges.router)
 
 @app.get("/health")
 async def health_check():
