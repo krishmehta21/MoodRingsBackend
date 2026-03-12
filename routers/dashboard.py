@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta, date, timezone
 import uuid
+import numpy as np
 import models, database
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
@@ -66,6 +67,37 @@ def calculate_sentiment_trend(db: Session, user_id: uuid.UUID, today: date) -> f
     return round(last_7 - prev_7, 3)
 
 
+def calculate_correlation(db: Session, uid: uuid.UUID, partner_id: uuid.UUID, today: date) -> float:
+    start_date = today - timedelta(days=30)
+    
+    my_logs = db.query(models.MoodLog).filter(
+        models.MoodLog.user_id == uid,
+        func.date(models.MoodLog.logged_at) >= start_date
+    ).all()
+    
+    partner_logs = db.query(models.MoodLog).filter(
+        models.MoodLog.user_id == partner_id,
+        func.date(models.MoodLog.logged_at) >= start_date
+    ).all()
+    
+    my_dict = {to_date(log.logged_at): log.score for log in my_logs}
+    p_dict = {to_date(log.logged_at): log.score for log in partner_logs}
+    
+    common_dates = sorted(list(set(my_dict.keys()).intersection(set(p_dict.keys()))))
+    
+    if len(common_dates) < 3:
+        return 0.0
+        
+    x = [my_dict[d] for d in common_dates]
+    y = [p_dict[d] for d in common_dates]
+    
+    correlation = np.corrcoef(x, y)[0, 1]
+    
+    if np.isnan(correlation):
+        return 0.0
+    return round(float(correlation), 2)
+
+
 def get_response_lag_hours(db: Session, couple_user_ids: list, today: date):
     logs = db.query(models.MoodLog).filter(
         models.MoodLog.user_id.in_(couple_user_ids),
@@ -92,9 +124,6 @@ def get_risk_tier(p_stress: float):
         return None, "#7AAB8A", "Feeling connected"
 
 
-# Hardcoded suggestions removed - now using dynamic engine in services/suggestions.py and models.py
-
-
 @router.get("")
 def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
     try:
@@ -118,7 +147,8 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
     try:
         my_logs_7d = db.query(
             models.MoodLog.logged_at,
-            models.MoodLog.score
+            models.MoodLog.score,
+            models.MoodLog.emotion_tags
         ).filter(
             models.MoodLog.user_id == uid,
             func.date(models.MoodLog.logged_at) >= seven_days_ago,
@@ -132,20 +162,32 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
     my_streak = calculate_streak(db, uid, today)
     my_sentiment_trend = calculate_sentiment_trend(db, uid, today)
 
-    my_latest_today = db.query(models.MoodLog).filter(
+    my_today_avg_query = db.query(
+        func.round(func.avg(models.MoodLog.score), 1).label("avg_score")
+    ).filter(
         models.MoodLog.user_id == uid,
         func.date(models.MoodLog.logged_at) == today
-    ).order_by(models.MoodLog.logged_at.desc()).first()
+    ).first()
+    my_today_score = float(my_today_avg_query.avg_score) if my_today_avg_query and my_today_avg_query.avg_score is not None else None
+
+    # For tags, we'll still get the most recent tags for today or collect all unique tags
+    my_latest_tags_today = db.query(models.MoodLog.emotion_tags).filter(
+        models.MoodLog.user_id == uid,
+        func.date(models.MoodLog.logged_at) == today
+    ).order_by(models.MoodLog.created_at.desc()).first()
+    my_today_tags = my_latest_tags_today.emotion_tags if my_latest_tags_today else []
 
     dashboard_data = {
         "risk_score": 0.0,
         "risk_color": "#7AAB8A",
         "risk_label": "Feeling connected",
+        "correlation_score": None,
         "features_snapshot": {},
         "response_lag_hours": None,
         "me": {
             "today_logged": my_logged_today,
-            "today_score": my_latest_today.score if my_latest_today else None,
+            "today_score": my_today_score,
+            "today_tags": my_today_tags,
             "streak": my_streak,
             "sentiment_trend": my_sentiment_trend,
             "last_7_days": my_scores
@@ -161,7 +203,8 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
     try:
         partner_logs_7d = db.query(
             models.MoodLog.logged_at,
-            models.MoodLog.score
+            models.MoodLog.score,
+            models.MoodLog.emotion_tags
         ).filter(
             models.MoodLog.user_id == partner_id,
             func.date(models.MoodLog.logged_at) >= seven_days_ago,
@@ -175,11 +218,21 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
     partner_streak = calculate_streak(db, partner_id, today)
     partner_sentiment_trend = calculate_sentiment_trend(db, partner_id, today)
 
-    partner_latest_today = db.query(models.MoodLog).filter(
+    partner_today_avg_query = db.query(
+        func.round(func.avg(models.MoodLog.score), 1).label("avg_score")
+    ).filter(
         models.MoodLog.user_id == partner_id,
         func.date(models.MoodLog.logged_at) == today
-    ).order_by(models.MoodLog.logged_at.desc()).first()
+    ).first()
+    partner_today_score = float(partner_today_avg_query.avg_score) if partner_today_avg_query and partner_today_avg_query.avg_score is not None else None
 
+    partner_latest_tags_today = db.query(models.MoodLog.emotion_tags).filter(
+        models.MoodLog.user_id == partner_id,
+        func.date(models.MoodLog.logged_at) == today
+    ).order_by(models.MoodLog.created_at.desc()).first()
+    partner_today_tags = partner_latest_tags_today.emotion_tags if partner_latest_tags_today else []
+
+    dashboard_data["correlation_score"] = calculate_correlation(db, uid, partner_id, today)
     dashboard_data["response_lag_hours"] = get_response_lag_hours(db, [uid, partner_id], today)
 
     # --- Risk score ---
@@ -206,7 +259,6 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
         ).order_by(models.Suggestion.created_at.desc()).first()
 
         if latest_suggestion:
-            # Map tier names to readable titles
             titles = {
                 "priority": "Priority Connection",
                 "active": "Connection Needed",
@@ -223,7 +275,8 @@ def get_dashboard(user_id: str, db: Session = Depends(database.get_db)):
 
     dashboard_data["partner"] = {
         "today_logged": partner_logged_today,
-        "today_score": partner_latest_today.score if partner_latest_today else None,
+        "today_score": partner_today_score,
+        "today_tags": partner_today_tags,
         "streak": partner_streak,
         "sentiment_trend": partner_sentiment_trend,
         "last_7_days": partner_scores

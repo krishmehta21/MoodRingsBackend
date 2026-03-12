@@ -5,7 +5,9 @@ from datetime import datetime, timedelta, timezone
 import uuid
 import json
 import os
+from pydantic import BaseModel
 from typing import List, Optional
+
 
 import models
 import database
@@ -13,6 +15,11 @@ from services.nudge_selector import SUGGESTIONS_PATH
 from services.push_notifications import send_mood_reminder_notification
 
 router = APIRouter(prefix="/nudges", tags=["Nudges"])
+
+class FeedbackRequest(BaseModel):
+    user_id: uuid.UUID
+    was_helpful: bool
+
 
 # Load suggestions once for enrichment
 _NUDGE_CACHE = {}
@@ -79,7 +86,8 @@ def get_nudges(
             "was_helpful": nudge.was_helpful
         })
 
-    return {"nudges": results}
+    return results
+
 
 @router.post("/{nudge_id}/acted")
 def mark_nudge_acted(nudge_id: str, db: Session = Depends(database.get_db)):
@@ -98,7 +106,7 @@ def mark_nudge_acted(nudge_id: str, db: Session = Depends(database.get_db)):
     return {"status": "ok"}
 
 @router.post("/{nudge_id}/feedback")
-def set_nudge_feedback(nudge_id: str, was_helpful: bool, db: Session = Depends(database.get_db)):
+def set_nudge_feedback(nudge_id: str, request: FeedbackRequest, db: Session = Depends(database.get_db)):
     """Sets was_helpful = value."""
     try:
         nid = uuid.UUID(nudge_id)
@@ -109,9 +117,10 @@ def set_nudge_feedback(nudge_id: str, was_helpful: bool, db: Session = Depends(d
     if not nudge:
         raise HTTPException(status_code=404, detail="Nudge not found.")
 
-    nudge.was_helpful = was_helpful
+    nudge.was_helpful = request.was_helpful
     db.commit()
     return {"status": "ok"}
+
 
 @router.post("/remind-partner")
 async def remind_partner(user_id: str, db: Session = Depends(database.get_db)):

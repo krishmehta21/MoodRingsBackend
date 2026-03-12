@@ -126,7 +126,7 @@ def save_partner_nudge(db: Session, recipient_id: uuid.UUID, subject_id: uuid.UU
     db.add(new_nudge)
     db.commit()
 
-def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partner_id: Optional[uuid.UUID], journal_text: Optional[str]):
+async def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partner_id: Optional[uuid.UUID], journal_text: Optional[str]):    
     """Consolidated background task for NLP, ML, and other heavy operations."""
     db = database.SessionLocal()
     try:
@@ -140,19 +140,7 @@ def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partner_id: 
             
             # 3. Proactive Partner Nudges
             from services.nudge_cooldown import is_on_cooldown
-            
-            # Use await because is_on_cooldown is async
-            # But run_mood_post_processing is NOT async. 
-            # I should make run_mood_post_processing async or use a sync cooldown check.
-            # Plan says "async def is_on_cooldown" but background tasks in FastAPI can be sync.
-            # I'll use asyncio.run or just make it sync for now if possible? 
-            # Actually, I'll make is_on_cooldown sync to avoid complexity, or wrap it.
-            # Let's check requirements for is_on_cooldown.
-            # "Create backend/services/nudge_cooldown.py ... async def is_on_cooldown"
-            # Since I'm in a sync background task, I'll wrap it.
-            import asyncio
-            on_cooldown = asyncio.run(is_on_cooldown(str(user_id), str(partner_id), db))
-
+            on_cooldown = await is_on_cooldown(str(user_id), str(partner_id), db)
             if not on_cooldown:
                 forecast = run_mood_forecast(str(user_id), db)
                 if forecast.should_notify_partner:
@@ -182,13 +170,12 @@ def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partner_id: 
                                 ).order_by(models.PartnerNudge.created_at.desc()).first()
                                 
                                 if saved_nudge:
-                                    import asyncio
-                                    asyncio.run(send_nudge_notification(
+                                    await send_nudge_notification(
                                         recipient_token=recipient.expo_push_token,
                                         subject_name=subject_name,
                                         nudge_message=nudge_data["message_to_partner"],
                                         nudge_id=str(saved_nudge.id)
-                                    ))
+                                    )
                         except Exception as e:
                             import logging
                             logging.getLogger(__name__).error(f"Failed to send nudge push notification: {e}")
@@ -265,21 +252,65 @@ def get_my_logs(user_id: str, db: Session = Depends(database.get_db)):
         .order_by(models.MoodLog.logged_at.desc())\
         .all()
 
-    results = []
+    # Grouping by date in Python for better control over field aggregation
+    grouped_results = {}
+    
     for log in logs:
-        decrypted_journal = decrypt_text(log.journal_text) if log.journal_text else None
-        results.append({
-            "id": str(log.id),
-            "user_id": str(log.user_id),
-            "logged_at": log.logged_at.isoformat() if log.logged_at else None,
-            "score": log.score,
-            "emotion_tags": log.emotion_tags,
-            "journal_text": decrypted_journal,
-            "sentiment_score": log.sentiment_score,
-            "calendar_stress": log.calendar_stress,
-            "created_at": log.created_at.isoformat() if log.created_at else None,
+        d = log.logged_at.date().isoformat()
+        if d not in grouped_results:
+            grouped_results[d] = {
+                "id": str(log.id), # Keep latest ID for editing
+                "user_id": str(log.user_id),
+                "logged_at": log.logged_at.isoformat(),
+                "scores": [log.score],
+                "sentiment_scores": [log.sentiment_score] if log.sentiment_score is not None else [],
+                "calendar_stresses": [log.calendar_stress] if log.calendar_stress is not None else [],
+                "all_tags": set(log.emotion_tags or []),
+                "journals": [decrypt_text(log.journal_text)] if log.journal_text else [],
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+        else:
+            grouped_results[d]["scores"].append(log.score)
+            if log.sentiment_score is not None:
+                grouped_results[d]["sentiment_scores"].append(log.sentiment_score)
+            if log.calendar_stress is not None:
+                grouped_results[d]["calendar_stresses"].append(log.calendar_stress)
+            if log.emotion_tags:
+                grouped_results[d]["all_tags"].update(log.emotion_tags)
+            if log.journal_text:
+                grouped_results[d]["journals"].append(decrypt_text(log.journal_text))
+
+    final_results = []
+    for d_iso in sorted(grouped_results.keys(), reverse=True):
+        data = grouped_results[d_iso]
+        
+        # Average Score
+        avg_score = round(sum(data["scores"]) / len(data["scores"]), 1)
+        
+        # Average Sentiment
+        avg_sent = None
+        if data["sentiment_scores"]:
+            avg_sent = round(sum(data["sentiment_scores"]) / len(data["sentiment_scores"]), 3)
+            
+        # Average Stress
+        avg_stress = None
+        if data["calendar_stresses"]:
+            avg_stress = round(sum(data["calendar_stresses"]) / len(data["calendar_stresses"]), 2)
+            
+        final_results.append({
+            "id": data["id"],
+            "user_id": data["user_id"],
+            "logged_at": data["logged_at"],
+            "score": avg_score,
+            "emotion_tags": sorted(list(data["all_tags"])),
+            "journal_text": "\n\n".join(data["journals"]) if data["journals"] else None,
+            "sentiment_score": avg_sent,
+            "calendar_stress": avg_stress,
+            "created_at": data["created_at"],
+            "is_aggregated": len(data["scores"]) > 1
         })
-    return results
+
+    return final_results
 
 @router.get("/couple")
 def get_couple_logs(user_id: str, db: Session = Depends(database.get_db)):
@@ -292,32 +323,58 @@ def get_couple_logs(user_id: str, db: Session = Depends(database.get_db)):
 
     partner_logs_result = []
     if user.partner_id:
-        partner_logs_query = db.query(models.MoodLog)\
+        p_logs = db.query(models.MoodLog)\
             .filter(models.MoodLog.user_id == user.partner_id)\
-            .with_entities(
-                models.MoodLog.id,
-                models.MoodLog.user_id,
-                models.MoodLog.logged_at,
-                models.MoodLog.score,
-                models.MoodLog.emotion_tags,
-                models.MoodLog.sentiment_score,
-                models.MoodLog.calendar_stress
-            )\
             .order_by(models.MoodLog.logged_at.desc())\
             .all()
 
-        for p_log in partner_logs_query:
+        p_grouped = {}
+        for log in p_logs:
+            d = log.logged_at.date().isoformat()
+            if d not in p_grouped:
+                p_grouped[d] = {
+                    "id": str(log.id),
+                    "user_id": str(log.user_id),
+                    "logged_at": log.logged_at.isoformat(),
+                    "scores": [log.score],
+                    "all_tags": set(log.emotion_tags or []),
+                    "sentiment_scores": [log.sentiment_score] if log.sentiment_score is not None else [],
+                    "calendar_stresses": [log.calendar_stress] if log.calendar_stress is not None else []
+                }
+            else:
+                p_grouped[d]["scores"].append(log.score)
+                if log.emotion_tags:
+                    p_grouped[d]["all_tags"].update(log.emotion_tags)
+                if log.sentiment_score is not None:
+                    p_grouped[d]["sentiment_scores"].append(log.sentiment_score)
+                if log.calendar_stress is not None:
+                    p_grouped[d]["calendar_stresses"].append(log.calendar_stress)
+
+        for d_iso in sorted(p_grouped.keys(), reverse=True):
+            data = p_grouped[d_iso]
+            avg_score = round(sum(data["scores"]) / len(data["scores"]), 1)
+            
+            avg_sent = None
+            if data["sentiment_scores"]:
+                avg_sent = round(sum(data["sentiment_scores"]) / len(data["sentiment_scores"]), 3)
+            
+            avg_stress = None
+            if data["calendar_stresses"]:
+                avg_stress = round(sum(data["calendar_stresses"]) / len(data["calendar_stresses"]), 2)
+
             partner_logs_result.append({
-                "id": str(p_log.id),
-                "user_id": str(p_log.user_id),
-                "logged_at": p_log.logged_at.isoformat() if p_log.logged_at else None,
-                "score": p_log.score,
-                "emotion_tags": p_log.emotion_tags,
-                "sentiment_score": p_log.sentiment_score,
-                "calendar_stress": p_log.calendar_stress,
+                "id": data["id"],
+                "user_id": data["user_id"],
+                "logged_at": data["logged_at"],
+                "score": avg_score,
+                "emotion_tags": sorted(list(data["all_tags"])),
+                "sentiment_score": avg_sent,
+                "calendar_stress": avg_stress,
+                "is_aggregated": len(data["scores"]) > 1
             })
 
     return {"me": my_logs, "partner": partner_logs_result}
+
 
 @router.patch("/{log_id}")
 def edit_mood_log(

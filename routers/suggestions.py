@@ -31,7 +31,7 @@ def get_current_suggestion(user_id: str, db: Session = Depends(database.get_db))
     return {
         "id": latest_suggestion.id,
         "tier": latest_suggestion.tier,
-        "message": latest_suggestion.message,
+        "description": latest_suggestion.message,
         "actions": latest_suggestion.actions,
         "created_at": latest_suggestion.created_at
     }
