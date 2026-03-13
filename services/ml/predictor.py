@@ -17,39 +17,27 @@ from routers.dashboard import get_response_lag_hours
 logger = logging.getLogger(__name__)
 
 MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'models'))
-MODEL_PATH = os.path.join(MODELS_DIR, 'v1.pkl')
-SCALER_PATH = os.path.join(MODELS_DIR, 'scaler_v1.pkl')
-
-# Models loaded lazily to speed up startup
-CLASSIFIER = None
-SCALER = None
-
-def _get_ml_artifacts():
-    global CLASSIFIER, SCALER
-    if CLASSIFIER is None or SCALER is None:
-        try:
-            if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
-                with open(MODEL_PATH, 'rb') as f:
-                    CLASSIFIER = pickle.load(f)
-                with open(SCALER_PATH, 'rb') as f:
-                    SCALER = pickle.load(f)
-        except Exception as e:
-            logger.error(f"Failed to load ML artifacts: {e}")
-    return CLASSIFIER, SCALER
+# ML Coefficients (Extracted from scikit-learn model)
+# X = [mood_delta_7d, sentiment_trend, response_lag_hours, calendar_stress, streak_broken, volatility_score, low_score_overlap]
+COEFFICIENTS = np.array([0.00096745, -0.41263829, 0.30631761, 0.07787253, 0.37404774, 0.21200456, 1.21966469])
+INTERCEPT = 0.05208952
+SCALER_MEAN = np.array([-0.01438288, -0.03609721, 6.21069746, 0.49647649, 0.516, 1.96767181, 1.476])
+SCALER_SCALE = np.array([2.98389571, 0.57041564, 3.56274709, 0.2867227, 0.49974393, 0.85874371, 1.13023183])
 
 def _execute_prediction(features_array: np.ndarray) -> float:
-    """Uses the loaded models to return the probability of stress event."""
-    clf, scl = _get_ml_artifacts()
-    if clf is None or scl is None:
-        return 0.0
-        
+    """Uses hardcoded coefficients to return the probability of stress event (Sigmoid)."""
     try:
-        scaled = SCALER.transform(features_array.reshape(1, -1))
-        # LogisticRegression.predict_proba returns [[P(class_0), P(class_1)]]
-        prob = CLASSIFIER.predict_proba(scaled)[0][1]
+        # Scale features manually: (X - mean) / scale
+        scaled = (features_array - SCALER_MEAN) / SCALER_SCALE
+        
+        # Logistic Regression: z = w1*x1 + w2*x2 + ... + b
+        z = np.dot(COEFFICIENTS, scaled) + INTERCEPT
+        
+        # Sigmoid: 1 / (1 + exp(-z))
+        prob = 1 / (1 + np.exp(-z))
         return round(float(prob), 3)
     except Exception as e:
-        logger.error(f"Prediction failed: {e}")
+        logger.error(f"Manual prediction failed: {e}")
         return 0.0
 
 

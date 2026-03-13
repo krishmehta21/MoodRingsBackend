@@ -16,47 +16,14 @@ try:
 except ImportError:
     vader_analyzer = None
 
-# RoBERTa Setup (Phase 8)
-_sentiment_pipeline = None
-
-def get_sentiment_pipeline():
-    global _sentiment_pipeline
-    # Only load RoBERTa if explicitly requested in environment
-    if os.getenv("NLP_MODE") != "roberta":
-        return None
-        
-    if _sentiment_pipeline is None:
-        try:
-            from transformers import pipeline
-            _sentiment_pipeline = pipeline(
-                "sentiment-analysis",
-                model="cardiffnlp/twitter-roberta-base-sentiment-latest",
-                return_all_scores=True
-            )
-        except Exception as e:
-            print(f"Failed to load RoBERTa model: {e}")
-            return None
-    return _sentiment_pipeline
-
 def analyze_sentiment(text: str) -> float:
-    """Uses RoBERTa with VADER fallback."""
-    pipe = get_sentiment_pipeline()
-    if pipe:
-        try:
-            results = pipe(text[:512])[0]  # truncate to model max
-            # Convert to -1.0 to 1.0 scale
-            # RoBERTa labels are usually 'negative', 'neutral', 'positive' (or labels 0, 1, 2)
-            # Depending on model, check labels. For CardiffNLP latest: 0: negative, 1: neutral, 2: positive
-            scores = {r['label']: r['score'] for r in results}
-            # Handle both label names and indices
-            pos = scores.get('positive', scores.get('LABEL_2', 0))
-            neg = scores.get('negative', scores.get('LABEL_0', 0))
-            return float(pos - neg)
-        except Exception as e:
-            print(f"RoBERTa analysis failed, falling back to VADER: {e}")
-    
+    """Uses VADER for lightweight sentiment analysis."""
     if vader_analyzer:
-        return vader_analyzer.polarity_scores(text)['compound']
+        try:
+            return vader_analyzer.polarity_scores(text)['compound']
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"VADER analysis failed: {e}")
     return 0.0
 
 # ML imports moved inside background task to speed up startup
