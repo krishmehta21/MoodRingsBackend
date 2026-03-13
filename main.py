@@ -4,11 +4,7 @@ from database import engine
 from routers import auth, logs, dashboard, risk, suggestions, insights, calendar, nudges
 from fastapi.middleware.cors import CORSMiddleware
 
-try:
-    models.Base.metadata.create_all(bind=engine)
-    print("Database connected")
-except Exception as e:
-    print("Database connection failed:", e)
+# Removed create_all to speed up startup. Handled by migrations.
 
 app = FastAPI(title="MoodRings API")
 app.add_middleware(

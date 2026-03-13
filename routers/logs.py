@@ -59,8 +59,7 @@ def analyze_sentiment(text: str) -> float:
         return vader_analyzer.polarity_scores(text)['compound']
     return 0.0
 
-from services.ml.predictor import generate_and_save_risk_score
-from services.ml.forecaster import run_mood_forecast, ForecastResult
+# ML imports moved inside background task to speed up startup
 from services.push_notifications import send_nudge_notification
 import json
 import random
@@ -100,7 +99,7 @@ def analyze_and_update_sentiment(log_id: uuid.UUID, text: str):
     finally:
         db.close()
 
-def select_partner_nudge(forecast: ForecastResult, partner_recent_score: float, time_of_day: str):
+def select_partner_nudge(forecast: "ForecastResult", partner_recent_score: float, time_of_day: str):
     """Selects a nudge from the JSON dataset based on context and time of day."""
     from services.nudge_selector import select_partner_nudge as selector_fn
     return selector_fn(forecast, partner_recent_score, time_of_day)
@@ -112,7 +111,7 @@ def get_time_of_day() -> str:
     if 17 <= hour < 22: return "evening"
     return "any"
 
-def save_partner_nudge(db: Session, recipient_id: uuid.UUID, subject_id: uuid.UUID, nudge: dict, forecast: ForecastResult):
+def save_partner_nudge(db: Session, recipient_id: uuid.UUID, subject_id: uuid.UUID, nudge: dict, forecast: "ForecastResult"):
     """Saves the nudge to the partner_nudges table."""
     new_nudge = models.PartnerNudge(
         recipient_id=recipient_id,
@@ -130,6 +129,9 @@ async def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partne
     """Consolidated background task for NLP, ML, and other heavy operations."""
     db = database.SessionLocal()
     try:
+        from services.ml.predictor import generate_and_save_risk_score
+        from services.ml.forecaster import run_mood_forecast
+
         # 1. NLP Sentiment
         if journal_text:
             analyze_and_update_sentiment(log_id, journal_text)

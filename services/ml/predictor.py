@@ -20,23 +20,27 @@ MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..',
 MODEL_PATH = os.path.join(MODELS_DIR, 'v1.pkl')
 SCALER_PATH = os.path.join(MODELS_DIR, 'scaler_v1.pkl')
 
-# Load models safely into memory
+# Models loaded lazily to speed up startup
 CLASSIFIER = None
 SCALER = None
 
-try:
-    if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
-        with open(MODEL_PATH, 'rb') as f:
-            CLASSIFIER = pickle.load(f)
-        with open(SCALER_PATH, 'rb') as f:
-            SCALER = pickle.load(f)
-except Exception as e:
-    logger.error(f"Failed to load ML artifacts: {e}")
-
+def _get_ml_artifacts():
+    global CLASSIFIER, SCALER
+    if CLASSIFIER is None or SCALER is None:
+        try:
+            if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
+                with open(MODEL_PATH, 'rb') as f:
+                    CLASSIFIER = pickle.load(f)
+                with open(SCALER_PATH, 'rb') as f:
+                    SCALER = pickle.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load ML artifacts: {e}")
+    return CLASSIFIER, SCALER
 
 def _execute_prediction(features_array: np.ndarray) -> float:
     """Uses the loaded models to return the probability of stress event."""
-    if CLASSIFIER is None or SCALER is None:
+    clf, scl = _get_ml_artifacts()
+    if clf is None or scl is None:
         return 0.0
         
     try:
