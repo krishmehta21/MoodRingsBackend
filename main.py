@@ -25,8 +25,7 @@ app.include_router(nudges.router)
 
 @app.get("/health")
 async def health_check():
-    from datetime import datetime
-    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+    return {"ok": True}
 
 @app.get("/")
 def read_root():
@@ -34,6 +33,8 @@ def read_root():
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import httpx, os, asyncio
+from services.reminders import check_and_send_reminders
+from database import SessionLocal
 
 scheduler = AsyncIOScheduler()
 
@@ -47,10 +48,19 @@ async def ping_self():
     except Exception:
         pass  # Silent — keep-alive failure must never crash anything
 
+def run_reminders():
+    db = SessionLocal()
+    try:
+        check_and_send_reminders(db)
+    finally:
+        db.close()
+
 @app.on_event("startup")
 async def start_keep_alive():
     if os.getenv("ENVIRONMENT") == "production":
         scheduler.add_job(ping_self, "interval", minutes=10)
+        # Check reminders every hour
+        scheduler.add_job(run_reminders, "interval", hours=1)
         scheduler.start()
 
 @app.on_event("shutdown")

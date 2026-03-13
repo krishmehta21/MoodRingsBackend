@@ -2,601 +2,783 @@
   {
     "id": "nudge_001",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["evening", "any"],
+    "time_of_day": [
+      "evening",
+      "any"
+    ],
     "effort_level": "low",
-    "message_to_partner": "Hey — your partner has been having a tough few days. Tonight might be a good night to just be present with them.",
+    "message_to_partner": "Hey \u00e2\u20ac\u201d your partner has been having a tough few days. Tonight might be a good night to just be present with them.",
     "suggested_action": "Put your phone away for the evening and just hang out together",
     "why_it_helps": "Undivided presence signals safety and connection",
-    "source_category": "gottman_bids_for_connection"
+    "source_category": "gottman_bids_for_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_002",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["morning", "any"],
+    "time_of_day": [
+      "morning",
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's energy seems a bit low lately. A small gesture this morning could go a long way.",
     "suggested_action": "Brew their favorite coffee or tea and bring it to them without being asked",
     "why_it_helps": "Acts of service create a sense of being cared for and noticed",
-    "source_category": "love_languages_acts_of_service"
+    "source_category": "love_languages_acts_of_service",
+    "category": "Physical"
   },
   {
     "id": "nudge_003",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "It looks like your partner's mood is dipping slightly. A quick check-in might mean a lot.",
     "suggested_action": "Send a 'thinking of you' text with a specific thing you appreciate about them",
     "why_it_helps": "Words of affirmation provide emotional security during dips",
-    "source_category": "love_languages_words_of_affirmation"
+    "source_category": "love_languages_words_of_affirmation",
+    "category": "Emotional"
   },
   {
     "id": "nudge_004",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's mood has been trending down. They might be feeling overwhelmed.",
     "suggested_action": "Take over one of their usual evening chores so they can rest for 30 minutes",
     "why_it_helps": "Reducing cognitive load allows for emotional recovery",
-    "source_category": "behavioral_activation"
+    "source_category": "behavioral_activation",
+    "category": "General"
   },
   {
     "id": "nudge_005",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's mood is entering a more stressful phase. Physical proximity can help ground them.",
     "suggested_action": "Initiate a long hug (20+ seconds) when you see them today",
     "why_it_helps": "Physical touch releases oxytocin and lowers cortisol",
-    "source_category": "attachment_theory_safety"
+    "source_category": "attachment_theory_safety",
+    "category": "Emotional"
   },
   {
     "id": "nudge_006",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "high",
     "message_to_partner": "Your partner is going through a very difficult stretch. They need a safe space to land.",
     "suggested_action": "Clear your schedule for 1 hour tonight to just listen to them without offering solutions",
     "why_it_helps": "Deep listening validates their experience and reduces isolation",
-    "source_category": "gottman_bids_for_connection"
+    "source_category": "gottman_bids_for_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_007",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner typically feels a bit lower on this day. Let's get ahead of it.",
     "suggested_action": "Plan a low-stress activity like watching a lighthearted show or taking a short walk together",
     "why_it_helps": "Predictive care builds trust and breaks negative cycles",
-    "source_category": "predictive_care"
+    "source_category": "predictive_care",
+    "category": "Quality Time"
   },
   {
     "id": "nudge_008",
     "mood_context": "both_declining",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "low",
     "message_to_partner": "It's been a tough few days for both of you. You're both in the trenches right now.",
     "suggested_action": "Order a favorite comfort food for dinner and commit to a 'no-stress' zone for the next 2 hours",
     "why_it_helps": "Shared recovery prevents relationship burnout",
-    "source_category": "shared_recovery"
+    "source_category": "shared_recovery",
+    "category": "Quality Time"
   },
   {
     "id": "nudge_009",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["afternoon"],
+    "time_of_day": [
+      "afternoon"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's mood is showing a slight downward trend. A small surprise can lift the fog.",
     "suggested_action": "Pick up their favorite snack or treat on your way home today",
     "why_it_helps": "Small surprises signal that they are in your thoughts",
-    "source_category": "love_languages_receiving_gifts"
+    "source_category": "love_languages_receiving_gifts",
+    "category": "Fun"
   },
   {
     "id": "nudge_010",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner has been feeling less connected lately. Re-establish a simple ritual.",
     "suggested_action": "Spend 10 minutes before bed doing a shared activity like a crossword or light reading together",
     "why_it_helps": "Small rituals create predictable points of connection",
-    "source_category": "gottman_rituals_of_connection"
+    "source_category": "gottman_rituals_of_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_011",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Mood momentum is slightly negative for your partner. Recognition can shift the energy.",
     "suggested_action": "Explicitly thank them for one specific thing they did recently, however small",
     "why_it_helps": "Gratitude counteracts the feeling of being overwhelmed",
-    "source_category": "positive_psychology"
+    "source_category": "positive_psychology",
+    "category": "Emotional"
   },
   {
     "id": "nudge_012",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Stress is building up for your partner. Help them decompress.",
     "suggested_action": "Suggest a 15-minute walk outside together, no phones allowed",
     "why_it_helps": "Nature and movement are natural mood stabilizers",
-    "source_category": "behavioral_activation"
+    "source_category": "behavioral_activation",
+    "category": "General"
   },
   {
     "id": "nudge_013",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's mood is hitting a critical low. Simplify their world.",
     "suggested_action": "Handle all food planning and prep for the next 24 hours so they don't have to decide anything",
     "why_it_helps": "Decision fatigue is crushing during severe mood dips",
-    "source_category": "cognitive_load_reduction"
+    "source_category": "cognitive_load_reduction",
+    "category": "General"
   },
   {
     "id": "nudge_014",
     "mood_context": "both_declining",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "You are both feeling the weight of the week. Time for an 'us' reset.",
     "suggested_action": "Put on a playlist of songs that have positive memories for you both and just listen for 15 minutes",
     "why_it_helps": "Shared nostalgia evokes feelings of safety and unity",
-    "source_category": "shared_meaning"
+    "source_category": "shared_meaning",
+    "category": "Quality Time"
   },
   {
     "id": "nudge_015",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["morning"],
+    "time_of_day": [
+      "morning"
+    ],
     "effort_level": "low",
     "message_to_partner": "This day is usually a hurdle for your partner. Start it with a cushion.",
     "suggested_action": "Leave a post-it note with a quick joke or a drawing where they will find it first thing",
     "why_it_helps": "Levity can break the anticipation of a 'bad day'",
-    "source_category": "humor_as_coping"
+    "source_category": "humor_as_coping",
+    "category": "Fun"
   },
   {
     "id": "nudge_016",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's social battery might be low. Support their need for quiet.",
     "suggested_action": "Offer to 'co-work' or 'co-relax' in the same room without the pressure to talk",
     "why_it_helps": "Parallel play provides connection without the effort of conversation",
-    "source_category": "attachment_theory_presence"
+    "source_category": "attachment_theory_presence",
+    "category": "General"
   },
   {
     "id": "nudge_017",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Tension is visible in your partner's recent mood patterns. Soften the environment.",
     "suggested_action": "Give them a 5-minute shoulder rub without them having to ask for it",
     "why_it_helps": "Touch bypasses verbal defenses and signals care",
-    "source_category": "physical_affection"
+    "source_category": "physical_affection",
+    "category": "Physical"
   },
   {
     "id": "nudge_018",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner is struggling deeply. Focus on basic comfort.",
     "suggested_action": "Set up a cozy spot with their favorite blanket and a drink, and encourage them to rest",
     "why_it_helps": "Creating a physical sanctuary supports emotional regulation",
-    "source_category": "safety_signals"
+    "source_category": "safety_signals",
+    "category": "Emotional"
   },
   {
     "id": "nudge_019",
     "mood_context": "both_declining",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "The relationship's collective energy is low. Initiate a small positive movement.",
     "suggested_action": "Suggest one small thing you can cross off both of your to-do lists together in 20 minutes",
     "why_it_helps": "Shared accomplishment builds a sense of being an effective team",
-    "source_category": "team_efficacy"
+    "source_category": "team_efficacy",
+    "category": "Communication"
   },
   {
     "id": "nudge_020",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's 'down day' is approaching. Build some positive anticipation.",
     "suggested_action": "Book a low-key plan for later this week that gives them something to look forward to",
     "why_it_helps": "Positive anticipation can bridge the gap during a temporary dip",
-    "source_category": "anticipatory_joy"
+    "source_category": "anticipatory_joy",
+    "category": "Fun"
   },
   {
     "id": "nudge_021",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's mood is showing a slight drift. Re-anchor with a simple question.",
     "suggested_action": "Ask: 'What's one thing that felt good today?' and listen to their answer without interrupting",
     "why_it_helps": "Focusing on small wins can interrupt a downward internal narrative",
-    "source_category": "positive_focus"
+    "source_category": "positive_focus",
+    "category": "Emotional"
   },
   {
     "id": "nudge_022",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's mood is slipping. Use a 'bid for connection' to bring them back.",
     "suggested_action": "Share a funny video or a photo of a shared memory you came across",
     "why_it_helps": "Micro-bids for connection keep the bond active during stress",
-    "source_category": "gottman_bids_for_connection"
+    "source_category": "gottman_bids_for_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_023",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner is in a very dark place. Just keep it simple and kind.",
     "suggested_action": "Tell them clearly: 'I see you're going through it, and I'm right here with you.'",
     "why_it_helps": "Verbalizing presence reduces the sense of being a burden",
-    "source_category": "attachment_theory_validation"
+    "source_category": "attachment_theory_validation",
+    "category": "General"
   },
   {
     "id": "nudge_024",
     "mood_context": "both_declining",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "You're both running on empty. Time to lower the bar for tonight.",
     "suggested_action": "Declare tonight a 'zero-expectation' night. No heavy talks, no chores, just comfort.",
     "why_it_helps": "Shared permission to fail gracefully reduces interpersonal friction",
-    "source_category": "stress_management"
+    "source_category": "stress_management",
+    "category": "General"
   },
   {
     "id": "nudge_025",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "The recurring dip for your partner is tonight. A change of scenery might help.",
     "suggested_action": "Suggest a quick drive or a short walk just to get out of the house for 15 minutes",
     "why_it_helps": "Environment shifts can disrupt habitual low-mood patterns",
-    "source_category": "environmental_psychology"
+    "source_category": "environmental_psychology",
+    "category": "General"
   },
   {
     "id": "nudge_026",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["morning"],
+    "time_of_day": [
+      "morning"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's energy is flagging. Use a morning ritual to boost them.",
     "suggested_action": "Send a morning text: 'Good luck with [specific task] today, you've got this!'",
     "why_it_helps": "Specific encouragement builds confidence during mild dips",
-    "source_category": "love_languages_words_of_affirmation"
+    "source_category": "love_languages_words_of_affirmation",
+    "category": "Emotional"
   },
   {
     "id": "nudge_027",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's mood is hitting a wall. Use 'externalization' to help.",
     "suggested_action": "Suggest: 'The world seems heavy today. Want to vent for 5 minutes? I'll just listen.'",
     "why_it_helps": "Directed venting prevents stress from becoming internalized",
-    "source_category": "narrative_therapy"
+    "source_category": "narrative_therapy",
+    "category": "Communication"
   },
   {
     "id": "nudge_028",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's mood is very low. Physical presence is the priority.",
     "suggested_action": "Just sit next to them while they do whatever they're doing, without needing to talk",
     "why_it_helps": "Sitting in the 'mess' together proves they aren't alone",
-    "source_category": "presence_over_solution"
+    "source_category": "presence_over_solution",
+    "category": "Quality Time"
   },
   {
     "id": "nudge_029",
     "mood_context": "both_declining",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "You both seem out of sync and down. Use eye contact to reconnect.",
     "suggested_action": "Take 2 minutes to just look at each other and share one thing you're glad you have together",
     "why_it_helps": "Eye contact and gratitude re-regulate the nervous system",
-    "source_category": "neurobiology_of_connection"
+    "source_category": "neurobiology_of_connection",
+    "category": "Emotional"
   },
   {
     "id": "nudge_030",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "It's the typical 'low day'. Keep the conversation light and easy.",
     "suggested_action": "Bring up a lighthearted topic or a fun plan for this weekend during dinner",
     "why_it_helps": "Gentle distraction can pull focus away from a recurring slump",
-    "source_category": "cognitive_reframing"
+    "source_category": "cognitive_reframing",
+    "category": "Emotional"
   },
   {
     "id": "nudge_031",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner has had a rougher week than usual. Acknowledge their effort.",
     "suggested_action": "Tell them: 'I've seen you working really hard lately, and I'm proud of how you're handling things.'",
     "why_it_helps": "Validation of effort prevents small dips from feeling like failures",
-    "source_category": "love_languages_words_of_affirmation"
+    "source_category": "love_languages_words_of_affirmation",
+    "category": "Emotional"
   },
   {
     "id": "nudge_032",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner is losing steam. Use a shared activity to reset.",
     "suggested_action": "Suggest playing a quick 10-minute game together, something simple and low-stakes",
     "why_it_helps": "Play is a powerful state-shifter for the nervous system",
-    "source_category": "play_therapy"
+    "source_category": "play_therapy",
+    "category": "Fun"
   },
   {
     "id": "nudge_033",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["morning"],
+    "time_of_day": [
+      "morning"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's mood is reaching a critical low. Start their day with comfort.",
     "suggested_action": "Prepare their lunch or help with their morning prep to give them 10 extra minutes of rest",
     "why_it_helps": "Removing morning stressors sets a softer tone for a hard day",
-    "source_category": "love_languages_acts_of_service"
+    "source_category": "love_languages_acts_of_service",
+    "category": "Physical"
   },
   {
     "id": "nudge_034",
     "mood_context": "both_declining",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "The environment at home might feel heavy. Freshen it up together.",
     "suggested_action": "Open the windows, put on some chill background music, and maybe light a candle",
     "why_it_helps": "Sensory shifts can influence collective emotional states",
-    "source_category": "sensory_regulation"
+    "source_category": "sensory_regulation",
+    "category": "Physical"
   },
   {
     "id": "nudge_035",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "This recurring day can feel like a grind. Add a moment of playfulness.",
     "suggested_action": "Send them a GIF or a meme that only the two of you would understand",
     "why_it_helps": "Inside jokes strengthen the 'us' boundary against outside stress",
-    "source_category": "gottman_rituals_of_connection"
+    "source_category": "gottman_rituals_of_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_036",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner is showing signs of moderate fatigue. Quality time is key.",
     "suggested_action": "Ask if they want to sit and talk for 15 minutes while having a drink of their choice",
     "why_it_helps": "Intentional check-ins provide a platform for early support",
-    "source_category": "gottman_bids_for_connection"
+    "source_category": "gottman_bids_for_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_037",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner is feeling disconnected. Use physical closeness to bridge it.",
     "suggested_action": "Suggest a foot rub or a back rub while watching something together tonight",
     "why_it_helps": "Touch helps regulate heart rate and breathing during stress",
-    "source_category": "love_languages_physical_touch"
+    "source_category": "love_languages_physical_touch",
+    "category": "General"
   },
   {
     "id": "nudge_038",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's mood is very heavy. Keep your presence non-judgmental.",
     "suggested_action": "Offer to just 'be' with them in the same room while they're on their phone or reading",
     "why_it_helps": "Low-pressure presence is more supportive than forced positivity",
-    "source_category": "attachment_theory_presence"
+    "source_category": "attachment_theory_presence",
+    "category": "General"
   },
   {
     "id": "nudge_039",
     "mood_context": "both_declining",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "You're both dragging. Change the evening plan to something simpler.",
     "suggested_action": "Cancel any extra plans and suggest an early night for both of you",
     "why_it_helps": "Prioritizing sleep is a foundational mood intervention",
-    "source_category": "sleep_hygiene"
+    "source_category": "sleep_hygiene",
+    "category": "General"
   },
   {
     "id": "nudge_040",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["morning"],
+    "time_of_day": [
+      "morning"
+    ],
     "effort_level": "low",
     "message_to_partner": "This recurring hurdle for them is today. Give them a head start.",
     "suggested_action": "Check in midday with: 'Thinking of you. I know today can be slow. I'm here if you need a break.'",
     "why_it_helps": "Anticipatory support validates their internal experience",
-    "source_category": "empathetic_resonance"
+    "source_category": "empathetic_resonance",
+    "category": "Emotional"
   },
   {
     "id": "nudge_041",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["afternoon"],
+    "time_of_day": [
+      "afternoon"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner is feeling a bit more sensitive today. Use soft communication.",
     "suggested_action": "Ask: 'How has your day has been feeling overall?' rather than 'What did you do today?'",
     "why_it_helps": "Feelings-focused questions invite more meaningful connection",
-    "source_category": "emotional_intelligence"
+    "source_category": "emotional_intelligence",
+    "category": "Emotional"
   },
   {
     "id": "nudge_042",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's mood is trending down. A task-based help can be huge.",
     "suggested_action": "Handle a task they usually do but find stressful, like life admin or a specific chore",
     "why_it_helps": "Operational support during mood dips prevents pile-up stress",
-    "source_category": "love_languages_acts_of_service"
+    "source_category": "love_languages_acts_of_service",
+    "category": "Physical"
   },
   {
     "id": "nudge_043",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Your partner's mood is extremely low. Encourage small movements.",
     "suggested_action": "Suggest doing something very small together, like walking to the corner or watering plants",
     "why_it_helps": "Micro-activities can gently interrupt a deep depressive state",
-    "source_category": "behavioral_activation"
+    "source_category": "behavioral_activation",
+    "category": "General"
   },
   {
     "id": "nudge_044",
     "mood_context": "both_declining",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Collective burnout alert. Use a shared ritual to decompress.",
     "suggested_action": "Take a warm shower or bath (separately or together) to physically wash away the day",
     "why_it_helps": "Physical cleansing combined with warm water reduces physiological stress",
-    "source_category": "physiological_regulation"
+    "source_category": "physiological_regulation",
+    "category": "Physical"
   },
   {
     "id": "nudge_045",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Recurring dip today for your partner. Keep the vibe supportive.",
     "suggested_action": "Just tell them: 'You're doing a great job getting through today. Dinner is on me tonight.'",
     "why_it_helps": "Predicting the need for support build a sense of team safety",
-    "source_category": "predictive_care"
+    "source_category": "predictive_care",
+    "category": "Quality Time"
   },
   {
     "id": "nudge_046",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["morning"],
+    "time_of_day": [
+      "morning"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner's morning energy is lower than usual. Brighten it slightly.",
     "suggested_action": "Leave a funny drawing or a simple 'I love you' on a sticky note for them to find",
     "why_it_helps": "Visual affirmations provide a durable mood lift",
-    "source_category": "love_languages_words_of_affirmation"
+    "source_category": "love_languages_words_of_affirmation",
+    "category": "Emotional"
   },
   {
     "id": "nudge_047",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "They seem caught in their head. Get them into their body.",
     "suggested_action": "Encourage a 10-minute stretching session together to help release physical tension",
     "why_it_helps": "Body movements help shift stagnant emotions",
-    "source_category": "somatic_regulation"
+    "source_category": "somatic_regulation",
+    "category": "Physical"
   },
   {
     "id": "nudge_048",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Severe mood dip for your partner. Silence can be supportive too.",
     "suggested_action": "Bring them a glass of water and a small snack, just letting them know you're there",
     "why_it_helps": "Basic needs support is the foundation of care during crisis",
-    "source_category": "attachment_theory_safety"
+    "source_category": "attachment_theory_safety",
+    "category": "Emotional"
   },
   {
     "id": "nudge_049",
     "mood_context": "both_declining",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "You're both in 'survival mode' today. Focus on the basics.",
     "suggested_action": "Decide on one thing you WON'T do tonight and just enjoy the free time together",
     "why_it_helps": "Shared boundary-setting reduces pressure and increases bond",
-    "source_category": "boundary_management"
+    "source_category": "boundary_management",
+    "category": "Communication"
   },
   {
     "id": "nudge_050",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "The recurring dip for them is here. Keep things gentle and easy.",
     "suggested_action": "Plan a very low-stakes evening, like listening to a podcast or an audiobook together",
     "why_it_helps": "Passive shared activities provide connection without high effort",
-    "source_category": "gottman_rituals_of_connection"
+    "source_category": "gottman_rituals_of_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_051",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Your partner is showing a bit and more stress lately. Use appreciation.",
     "suggested_action": "Tell them specific thing they've done lately that you really appreciated",
     "why_it_helps": "Specific gratitude is more impactful than general praise",
-    "source_category": "positive_psychology"
+    "source_category": "positive_psychology",
+    "category": "Emotional"
   },
   {
     "id": "nudge_052",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["evening"],
+    "time_of_day": [
+      "evening"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Their mood drift is becoming visible. Reconnect through play.",
     "suggested_action": "Find a quick 5-minute online quiz or a fun fact to share and discuss together",
     "why_it_helps": "Brief positive intellectual engagement can shift the mood",
-    "source_category": "intellectual_connection"
+    "source_category": "intellectual_connection",
+    "category": "Communication"
   },
   {
     "id": "nudge_053",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Severe mood drop alert. Be the keeper of their routine.",
     "suggested_action": "Kindly remind them of a small routine that usually helps, like their skincare or tea",
     "why_it_helps": "Maintaining routines provides a sense of control during emotional chaos",
-    "source_category": "routine_maintenance"
+    "source_category": "routine_maintenance",
+    "category": "General"
   },
   {
     "id": "nudge_054",
     "mood_context": "both_declining",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Both your tanks are on empty. Re-fill together with quality time.",
     "suggested_action": "Spend 15 minutes of 'face-to-face' time with no gadgets and just check in",
     "why_it_helps": "Quality time is the primary re-regulator in high-stress pairings",
-    "source_category": "love_languages_quality_time"
+    "source_category": "love_languages_quality_time",
+    "category": "General"
   },
   {
     "id": "nudge_055",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["morning"],
+    "time_of_day": [
+      "morning"
+    ],
     "effort_level": "low",
     "message_to_partner": "The hurdle day for them. Add a small 'up' at the start.",
     "suggested_action": "Brew a second pot of coffee or tea so they have an easy refill throughout their morning",
     "why_it_helps": "Consistent small support creates a buffer for recurring hurdles",
-    "source_category": "love_languages_acts_of_service"
+    "source_category": "love_languages_acts_of_service",
+    "category": "Physical"
   },
   {
     "id": "nudge_056",
     "mood_context": "partner_declining_mild",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Mild mood dip for your partner. Use a physical anchor.",
     "suggested_action": "Just reach out and hold their hand for a few minutes while you're sitting together",
     "why_it_helps": "Hand-holding is scientifically shown to reduce pain and stress",
-    "source_category": "physical_affection"
+    "source_category": "physical_affection",
+    "category": "Physical"
   },
   {
     "id": "nudge_057",
     "mood_context": "partner_declining_moderate",
-    "time_of_day": ["afternoon"],
+    "time_of_day": [
+      "afternoon"
+    ],
     "effort_level": "low",
     "message_to_partner": "Their mood energy is flagging midday. Provide a quick boost.",
     "suggested_action": "Send them a quick text: 'You're doing amazing today, can't wait to see you later.'",
     "why_it_helps": "Midday affirmations bridge the isolation of a hard workday",
-    "source_category": "words_of_affirmation"
+    "source_category": "words_of_affirmation",
+    "category": "General"
   },
   {
     "id": "nudge_058",
     "mood_context": "partner_declining_severe",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "Severe mood drop detected. Focus on total comfort for them.",
     "suggested_action": "Prepare a small snack they love and just leave it near them with a kiss",
     "why_it_helps": "Unconditional care during hard times is the core of intimacy",
-    "source_category": "attachment_theory_care"
+    "source_category": "attachment_theory_care",
+    "category": "General"
   },
   {
     "id": "nudge_059",
     "mood_context": "both_declining",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "low",
     "message_to_partner": "Collective stress levels are high. Use humor to break it.",
     "suggested_action": "Recall a funny story or a hilarious situation you both found yourselves in",
     "why_it_helps": "Laughter physically changes the brain's chemistry for the better",
-    "source_category": "shared_meaning_humor"
+    "source_category": "shared_meaning_humor",
+    "category": "General"
   },
   {
     "id": "nudge_060",
     "mood_context": "partner_low_recurring",
-    "time_of_day": ["any"],
+    "time_of_day": [
+      "any"
+    ],
     "effort_level": "medium",
     "message_to_partner": "The final recurring hurdle day of the week. Let's finish it strong.",
     "suggested_action": "Plan a totally chill 'sofa date' for this evening with their favorite media",
     "why_it_helps": "Ending hurdle days with intentional comfort prevents mood residual",
-    "source_category": "stress_closure"
+    "source_category": "stress_closure",
+    "category": "General"
   }
 ]

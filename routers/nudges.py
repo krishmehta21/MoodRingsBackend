@@ -20,6 +20,12 @@ class FeedbackRequest(BaseModel):
     user_id: uuid.UUID
     was_helpful: bool
 
+class SendPushRequest(BaseModel):
+    user_id: uuid.UUID
+    nudge_id: uuid.UUID
+    title: str
+    body: str
+
 
 # Load suggestions once for enrichment
 _NUDGE_CACHE = {}
@@ -149,5 +155,36 @@ async def remind_partner(user_id: str, db: Session = Depends(database.get_db)):
         expo_token=partner.expo_push_token,
         partner_name=user.display_name or "Your partner"
     )
+
+    return {"sent": success}
+
+@router.post("/send-push")
+async def send_push_internal(req: SendPushRequest, db: Session = Depends(database.get_db)):
+    """
+    Internal endpoint to trigger a push notification for a specific nudge.
+    Used by background tasks or admin triggers.
+    """
+    user = db.query(models.User).filter(models.User.id == req.user_id).first()
+    if not user or not user.expo_push_token:
+        return {"sent": False, "reason": "no_token"}
+
+    from services.push_notifications import send_push_notification
+    success = await send_push_notification(
+        expo_token=user.expo_push_token,
+        title=req.title,
+        body=req.body,
+        data={
+            "type": "partner_nudge",
+            "nudge_id": str(req.nudge_id),
+            "navigate_to": "nudges"
+        }
+    )
+    
+    # If the token is invalid, clear it
+    if not success and user.expo_push_token:
+        # Note: We only clear if we are sure it's an "error" status from Expo
+        # For simplicity in this best-effort implementation, we'll keep it for now
+        # unless send_push_notification explicitly signals a dead token.
+        pass
 
     return {"sent": success}

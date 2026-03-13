@@ -80,3 +80,4 @@ class PartnerNudge(Base):
     seen_at = Column(DateTime(timezone=True), nullable=True)
     acted_on_at = Column(DateTime(timezone=True), nullable=True)
     was_helpful = Column(Boolean, nullable=True)
+    category = Column(String(50), nullable=False, server_default='General')

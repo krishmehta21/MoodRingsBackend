@@ -79,18 +79,21 @@ def get_time_of_day() -> str:
     return "any"
 
 def save_partner_nudge(db: Session, recipient_id: uuid.UUID, subject_id: uuid.UUID, nudge: dict, forecast: "ForecastResult"):
-    """Saves the nudge to the partner_nudges table."""
+    """Saves the nudge to the partner_nudges table and returns the object."""
     new_nudge = models.PartnerNudge(
         recipient_id=recipient_id,
         subject_id=subject_id,
         nudge_id=nudge["id"],
         message=nudge["message_to_partner"],
+        category=nudge.get("category", "General"),
         forecast_slope=forecast.slope_7d,
         predicted_score=forecast.predicted_score_24h,
         confidence=forecast.confidence
     )
     db.add(new_nudge)
     db.commit()
+    db.refresh(new_nudge)
+    return new_nudge
 
 async def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partner_id: Optional[uuid.UUID], journal_text: Optional[str]):    
     """Consolidated background task for NLP, ML, and other heavy operations."""
@@ -121,30 +124,22 @@ async def run_mood_post_processing(log_id: uuid.UUID, user_id: uuid.UUID, partne
 
                     nudge_data = select_partner_nudge(forecast, p_score, get_time_of_day())
                     if nudge_data:
-                        save_partner_nudge(db, partner_id, user_id, nudge_data, forecast)
+                        saved_nudge = save_partner_nudge(db, partner_id, user_id, nudge_data, forecast)
                         
                         # Send push notification to recipient
                         try:
+                            # Use use_id as recipient here (partner_id in this context is the one receiving the nudge)
                             recipient = db.query(models.User).filter(models.User.id == partner_id).first()
                             if recipient and recipient.expo_push_token:
                                 subject = db.query(models.User).filter(models.User.id == user_id).first()
                                 subject_name = subject.display_name if subject else "Your partner"
                                 
-                                # We need to get the saved nudge to get its ID, but save_partner_nudge doesn't return it
-                                # and it's already committed. We can query for the latest nudge.
-                                # Alternatively, I'll modify save_partner_nudge to return the nudge or just query it here.
-                                saved_nudge = db.query(models.PartnerNudge).filter(
-                                    models.PartnerNudge.recipient_id == partner_id,
-                                    models.PartnerNudge.subject_id == user_id
-                                ).order_by(models.PartnerNudge.created_at.desc()).first()
-                                
-                                if saved_nudge:
-                                    await send_nudge_notification(
-                                        recipient_token=recipient.expo_push_token,
-                                        subject_name=subject_name,
-                                        nudge_message=nudge_data["message_to_partner"],
-                                        nudge_id=str(saved_nudge.id)
-                                    )
+                                await send_nudge_notification(
+                                    recipient_token=recipient.expo_push_token,
+                                    subject_name=subject_name,
+                                    nudge_message=nudge_data["message_to_partner"],
+                                    nudge_id=str(saved_nudge.id)
+                                )
                         except Exception as e:
                             import logging
                             logging.getLogger(__name__).error(f"Failed to send nudge push notification: {e}")
@@ -391,3 +386,67 @@ def delete_mood_log(log_id: str, user_id: str, db: Session = Depends(database.ge
     db.delete(log)
     db.commit()
     return {"message": "Log deleted."}
+    
+@router.get("/history")
+def get_mood_history(user_id: str, days: int = 7, db: Session = Depends(database.get_db)):
+    """
+    Returns daily average mood scores for the last X days.
+    Structure: {'me': [...], 'partner': [...]}
+    """
+    from sqlalchemy import func as sa_func
+    from datetime import time as dt_time  # datetime.time, NOT the time module
+
+    days = min(days, 30)
+    try:
+        uid = uuid.UUID(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid user_id")
+
+    user = db.query(models.User).filter(models.User.id == uid).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    end_date = datetime.now(timezone.utc).date()
+    start_date = end_date - timedelta(days=days - 1)
+
+    # Build a timezone-aware start datetime — was broken before (time.min = time module, not datetime.time)
+    start_dt = datetime.combine(start_date, dt_time.min).replace(tzinfo=timezone.utc)
+
+    def get_user_history_list(uid_to_query):
+        if uid_to_query is None:
+            return []
+
+        logs = (
+            db.query(
+                sa_func.date(models.MoodLog.logged_at).label("day"),
+                sa_func.avg(models.MoodLog.score).label("avg_score"),
+            )
+            .filter(
+                models.MoodLog.user_id == uid_to_query,
+                models.MoodLog.logged_at >= start_dt,
+            )
+            .group_by(sa_func.date(models.MoodLog.logged_at))
+            .order_by("day")
+            .all()
+        )
+
+        history_map = {
+            str(row.day): round(float(row.avg_score), 2) for row in logs
+        }
+
+        # Fill every day in the range — days with no log get score: null
+        results = []
+        curr = start_date
+        while curr <= end_date:
+            d_iso = curr.isoformat()
+            results.append({
+                "date": d_iso,
+                "score": history_map.get(d_iso),  # None if no log that day
+            })
+            curr += timedelta(days=1)
+        return results
+
+    return {
+        "me": get_user_history_list(uid),
+        "partner": get_user_history_list(user.partner_id) if user.partner_id else [],
+    }

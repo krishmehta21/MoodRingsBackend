@@ -21,6 +21,13 @@ class AuthRequest(BaseModel):
     email: str
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    access_token: str
+    new_password: str
+
 class ProfileUpdateRequest(BaseModel):
     user_id: str
     display_name: str
@@ -90,12 +97,10 @@ def register(req: AuthRequest, db: Session = Depends(database.get_db)):
 
     uid = uuid.UUID(auth_resp.user.id)
 
-    # Try finding by ID first, then by email (handles re-registration after delete)
     user = db.query(models.User).filter(models.User.id == uid).first()
     if not user:
         user = db.query(models.User).filter(models.User.email == req.email).first()
         if user:
-            # Orphaned row from a previous account — update the ID to match new Supabase auth
             user.id = uid
             user.profile_complete = False
             user.display_name = None
@@ -105,7 +110,6 @@ def register(req: AuthRequest, db: Session = Depends(database.get_db)):
             db.commit()
             db.refresh(user)
         else:
-            # Truly new user
             user = models.User(id=uid, email=req.email)
             db.add(user)
             db.commit()
@@ -124,7 +128,6 @@ def register(req: AuthRequest, db: Session = Depends(database.get_db)):
 
 @router.post("/login")
 def login(req: AuthRequest, db: Session = Depends(database.get_db)):
-    # Step 1: Supabase auth
     try:
         auth_resp = supabase.auth.sign_in_with_password({"email": req.email, "password": req.password})
     except Exception as e:
@@ -133,13 +136,11 @@ def login(req: AuthRequest, db: Session = Depends(database.get_db)):
     if not auth_resp.session:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
-    # Step 2: DB lookup with safe upsert
     try:
         uid = uuid.UUID(auth_resp.user.id)
         user = db.query(models.User).filter(models.User.id == uid).first()
 
         if not user:
-            # Check by email before inserting (prevents UniqueViolation)
             user = db.query(models.User).filter(models.User.email == req.email).first()
             if user:
                 user.id = uid
@@ -166,6 +167,60 @@ def login(req: AuthRequest, db: Session = Depends(database.get_db)):
             "display_name": user.display_name,
         }
     }
+
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest):
+    """
+    Sends a Supabase password reset email.
+    Always returns 200 regardless of whether the email exists — prevents
+    user enumeration attacks (never reveal if an email is registered).
+    The reset link in the email points to your app's deep link or
+    Supabase redirect URL configured in the Supabase dashboard.
+    """
+    try:
+        supabase.auth.reset_password_email(
+            req.email,
+            options={
+                # Set this to your app's deep link or web URL in Supabase dashboard:
+                # Authentication > URL Configuration > Redirect URLs
+                # e.g. "moodrings://reset-password" for Expo deep linking
+                # or   "https://moodringsbackend.onrender.com/auth/reset-password" for web flow
+            }
+        )
+    except Exception:
+        # Silently swallow — we never confirm whether an email exists
+        pass
+
+    return {"message": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest):
+    """
+    Exchanges the access_token from the Supabase reset email link
+    and sets the new password.
+
+    Flow:
+    1. User clicks reset link in email → redirected to your app with
+       ?access_token=xxx&type=recovery in the URL/deep link params
+    2. App extracts access_token and sends it here with the new password
+    3. We call Supabase to update the password using that token
+    """
+    if len(req.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+
+    try:
+        # Set the session using the recovery token so we can update the password
+        supabase.auth.set_session(req.access_token, req.access_token)
+        supabase.auth.update_user({"password": req.new_password})
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail="Reset link is invalid or has expired. Please request a new one."
+        )
+
+    return {"message": "Password updated successfully."}
 
 
 @router.get("/me")
@@ -292,24 +347,18 @@ def delete_account(user_id: str, db: Session = Depends(database.get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
 
-    # Unlink partner first
     if user.partner_id:
         partner = db.query(models.User).filter(models.User.id == user.partner_id).first()
         if partner:
             partner.partner_id = None
 
-    # Delete all mood logs
     db.query(models.MoodLog).filter(models.MoodLog.user_id == uid).delete(synchronize_session=False)
-
-    # Delete Postgres row
     db.delete(user)
     db.commit()
 
-    # Delete from Supabase Auth — THIS was the missing step causing re-registration to fail
     try:
         supabase.auth.admin.delete_user(str(uid))
     except Exception as e:
-        # Log but don't fail — Postgres row is already gone
         print(f"Warning: could not delete Supabase Auth user {uid}: {e}")
 
     return {"message": "Account successfully deleted."}
